@@ -3,32 +3,36 @@ import time
 import json
 import os, sys, argparse
 from argparse import _SubParsersAction as subparsers
-#import prettytable
 import pandas as pd
 from qsaas.qsaas import Tenant
-#from tabulate import tabulate
 
-def ls(q, path):
+def ls(q, myspace):
     print("running ls")
-    if path:
-        cid = getPath(q, path)
-        # ?connectionId=798ee261-9c4e-45c1-93e4-523e0439b6b1
-        # , params={"resourceType":"app"}
+    if myspace:
+        cid = getspace(q, myspace)
         files = q.get('datafiles', params={"connectionId":cid})
     else:
          files = q.get('datafiles')
 
     tblPrint(files)
     
-def getPath(q, path):
+def getspace(q, myspace):
     # qlik raw get v1/datafiles/connections --query spaceid=5fa47573a0cfd40001bd5924
     # GET https://lkn-qlkaccount.ap.qlikcloud.com/api/v1/spaces?name=shared-data
-    space=q.get('spaces', params={"name": path})
-    print(space[0]['id'])
-    spid=space[0]['id']
-    conn=q.get('datafiles/connections', params={"spaceid": spid})
-    print(conn[0]['id'])
-    return conn[0]['id']
+    
+    space=q.get('spaces', params={"name": myspace})
+    try:
+        #print(space[0]['id'])
+        spid=space[0]['id']
+    except:
+        print("Space not found.  Aborting.")
+        sys.exit(1)
+    else:    
+        print(space[0]['id'])
+        spid=space[0]['id']
+        conn=q.get('datafiles/connections', params={"spaceid": spid})
+        print(conn[0]['id'])
+        return conn[0]['id']
 
 def tblPrint(qData):
     df = pd.DataFrame(qData)
@@ -60,7 +64,7 @@ def main():
     parser_ls = subparsers.add_parser('ls')
     parser_cp = subparsers.add_parser('cp')
     # add a required argument
-    parser_ls.add_argument('--path', '-p', dest='path', type=str, required=False,  help='the path to list')
+    parser_ls.add_argument('--space', '-s', dest='myspace', type=str, required=False,  help='the space to list')
 
     parser_cp.add_argument('source', type=str,  help='source file')
     parser_cp.add_argument('dest', type=str,  help='destination file')
@@ -78,7 +82,7 @@ def main():
 
     match args.command:
         case "ls":
-            ls(q, args.path)
+            ls(q, args.myspace)
         case "cp":  
             cp(args.cmdopts)
 
