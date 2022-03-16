@@ -1,7 +1,7 @@
 # qlikfs
 ## Filesystem commands for interacting with Qlik Cloud Datafiles
 
-### Tenant.jason structure:
+### Tenant.json structure:
 ```json
 {
     "api_key": "<API_KEY>",
